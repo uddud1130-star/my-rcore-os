@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:rcore-os/tg-rcore-tutorial-ch3.git
+	branch = test
+	commit = eda97d45f6b97850b09de0f4b2d3e12f6ca56899
+	parent = b6bf00227c0713063e043c25f85b4cdb16271dd1
+	method = merge
+	cmdver = 0.4.9
