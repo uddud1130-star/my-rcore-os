@@ -28,7 +28,9 @@
 
 // 任务管理模块：定义任务控制块（TCB）和调度事件
 mod task;
-
+/// 当前正在运行的任务索引，供trace系统调用使用
+static CURRENT_TASK: core::sync::atomic::AtomicUsize =
+    core::sync::atomic::AtomicUsize::new(0);
 // 引入控制台输出宏（print! / println!），由 tg_console 库提供
 #[macro_use]
 extern crate tg_console;
@@ -38,7 +40,7 @@ use impls::{Console, SyscallContext};
 // riscv 库：访问 RISC-V 控制状态寄存器（CSR），如 scause、sie、time
 use riscv::register::*;
 // 任务控制块
-use task::TaskControlBlock;
+
 // 日志模块
 use tg_console::log;
 // SBI 调用：set_timer、console_putchar、shutdown 等
@@ -104,7 +106,11 @@ extern "C" fn rust_main() -> ! {
     tg_syscall::init_trace(&SyscallContext);
 
     // 第四步：初始化任务控制块数组，加载所有用户程序
-    let mut tcbs = [TaskControlBlock::ZERO; APP_CAPACITY];
+    let tcbs = unsafe {
+        TCBS_PTR = core::ptr::addr_of_mut!(TCBS_STORAGE) as *mut task::TaskControlBlock;
+        TCBS_LEN = APP_CAPACITY;
+        core::slice::from_raw_parts_mut(TCBS_PTR, APP_CAPACITY)
+    };
     let mut index_mod = 0;
     for (i, app) in tg_linker::AppMeta::locate().iter().enumerate() {
         let entry = app.as_ptr() as usize;
@@ -124,6 +130,7 @@ extern "C" fn rust_main() -> ! {
     let mut i = 0usize; // 当前任务索引
     while remain > 0 {
         let tcb = &mut tcbs[i];
+        CURRENT_TASK.store(i, core::sync::atomic::Ordering::Relaxed);
         if !tcb.finish {
             loop {
                 // 【抢占式调度】设置时钟中断：12500 个时钟周期后触发
@@ -208,6 +215,22 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
 
 // ========== 接口实现 ==========
 
+/// 全局任务syscall计数访问
+/// 供trace系统调用查询使用
+static mut TCBS_PTR: *mut task::TaskControlBlock = core::ptr::null_mut();
+static mut TCBS_LEN: usize = 0;
+static mut TCBS_STORAGE: [task::TaskControlBlock; 32] = 
+    [task::TaskControlBlock::ZERO; 32];
+/// 获取指定任务的系统调用计数
+/// task_id: 任务索引, syscall_id: 系统调用编号
+pub fn get_syscall_count(task_id: usize, syscall_id: usize) -> u32 {
+    unsafe {
+        if TCBS_PTR.is_null() || task_id >= TCBS_LEN {
+            return 0;
+        }
+        (*TCBS_PTR.add(task_id)).syscall_times[syscall_id]
+    }
+}
 /// 各依赖库所需接口的具体实现
 mod impls {
     use tg_syscall::*;
@@ -304,17 +327,50 @@ mod impls {
     impl Trace for SyscallContext {
         #[inline]
         fn trace(
-            &self,
-            _caller: Caller,
-            _trace_request: usize,
-            _id: usize,
-            _data: usize,
+           &self,
+           caller: Caller,
+           trace_request: usize,
+           id: usize,
+           data: usize,
         ) -> isize {
-            tg_console::log::info!("trace: not implemented");
-            -1
+           // 通过caller.entity找到当前任务
+           // entity存的是任务索引
+           let _task_id = caller.entity; // 暂时忽略，用全局变量代替
+           match trace_request {
+                 // trace_request=0: 读取用户内存
+                 0 => {
+                     let ptr = id as *const u8;
+                     if ptr.is_null() {
+                         return -1;
+                      }
+                      unsafe { *ptr as isize }
+                 }
+                 // trace_request=1: 写入用户内存
+                 1 => {
+                     let ptr = id as *mut u8;
+                     if ptr.is_null() {
+                         return -1;
+                     }
+                     unsafe { *ptr = data as u8 };
+                     0
+                 }
+                 // trace_request=2: 查询系统调用计数
+                 2 => {
+                      // 需要访问全局TCB数组
+                      // 通过TASK_SYSCALL_TIMES全局变量获取
+                     let task_id = super::CURRENT_TASK
+                         .load(core::sync::atomic::Ordering::Relaxed);
+                     if id < 512 {
+                           super::get_syscall_count(task_id, id) as isize
+                     } else {
+                        -1
+                     }
+                 }
+                 _ => -1,
+             }
         }
-    }
-}
+     }
+  }
 
 /// 非 RISC-V64 架构的占位模块。
 ///

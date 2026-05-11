@@ -25,13 +25,12 @@ use tg_syscall::{Caller, SyscallId};
 /// - `finish`：任务是否已完成（退出或被杀死）
 /// - `stack`：用户栈空间（8 KiB），每个任务有独立的栈
 pub struct TaskControlBlock {
-    /// 用户态上下文：保存 Trap 时的所有寄存器状态
     ctx: LocalContext,
-    /// 任务完成标志：true 表示已退出或被杀死
     pub finish: bool,
-    /// 用户栈：8 KiB（1024 个 usize = 1024 × 8 = 8192 字节）
-    /// 每个任务拥有独立的栈空间，避免栈溢出影响其他任务
     stack: [usize; 1024],
+    /// 系统调用计数器：记录每个syscall被调用的次数
+    /// 索引对应syscall ID，最多支持512个不同的syscall
+    pub syscall_times: [u32; 512],
 }
 
 /// 调度事件
@@ -52,9 +51,10 @@ pub enum SchedulingEvent {
 impl TaskControlBlock {
     /// 零值常量：用于数组初始化
     pub const ZERO: Self = Self {
-        ctx: LocalContext::empty(),
-        finish: false,
-        stack: [0; 1024],
+    ctx: LocalContext::empty(),
+    finish: false,
+    stack: [0; 1024],
+    syscall_times: [0; 512],
     };
 
     /// 初始化一个任务
@@ -63,11 +63,11 @@ impl TaskControlBlock {
     /// - 创建用户态上下文，设置入口地址和 `sstatus.SPP = User`
     /// - 将栈指针设置为用户栈的栈顶（高地址端）
     pub fn init(&mut self, entry: usize) {
-        self.stack.fill(0);
-        self.finish = false;
-        self.ctx = LocalContext::user(entry);
-        // 栈从高地址向低地址增长，所以 sp 指向栈顶（数组末尾之后的地址）
-        *self.ctx.sp_mut() = self.stack.as_ptr() as usize + core::mem::size_of_val(&self.stack);
+    self.stack.fill(0);
+    self.finish = false;
+    self.syscall_times = [0; 512];  // 加这一行
+    self.ctx = LocalContext::user(entry);
+    *self.ctx.sp_mut() = self.stack.as_ptr() as usize + core::mem::size_of_val(&self.stack);
     }
 
     /// 执行此任务
@@ -89,6 +89,11 @@ impl TaskControlBlock {
 
         // a7 寄存器存放 syscall ID
         let id = self.ctx.a(7).into();
+        // 记录系统调用次数 
+        let id_usize: usize = self.ctx.a(7);
+        if id_usize < 512 {
+              self.syscall_times[id_usize] += 1;
+        }
         // a0-a5 寄存器存放系统调用参数
         let args = [
             self.ctx.a(0),
