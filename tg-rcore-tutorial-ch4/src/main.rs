@@ -137,6 +137,8 @@ impl ProcessList {
     }
 }
 
+/// 当前进程的系统调用计数器
+static mut SYSCALL_TIMES: [u32; 512] = [0; 512];
 /// 全局进程列表实例。
 static PROCESSES: ProcessList = ProcessList::new();
 
@@ -249,11 +251,17 @@ extern "C" fn schedule() -> ! {
                 let ctx = &mut ctx.context;
                 let id: Id = ctx.a(7).into();
                 let args = [ctx.a(0), ctx.a(1), ctx.a(2), ctx.a(3), ctx.a(4), ctx.a(5)];
+                // 记录系统调用次数
+                let id_usize: usize = ctx.a(7);
+                if id_usize < 512 {
+                    unsafe { SYSCALL_TIMES[id_usize] += 1; }
+                }
                 match tg_syscall::handle(Caller { entity: 0, flow: 0 }, id, args) {
                     Ret::Done(ret) => match id {
                         // exit：移除进程
                         Id::EXIT => unsafe {
                             PROCESSES.get_mut().remove(0);
+                            SYSCALL_TIMES = [0; 512]; // 进程退出时重置计数器
                         },
                         // 其他系统调用：写回返回值，sepc += 4
                         _ => {
@@ -593,6 +601,14 @@ mod impls {
                         {
                             unsafe { *ptr.as_mut() = data as u8 };
                             0
+                        } else {
+                            -1
+                        }
+                    }
+                    // trace_request=2: 查询系统调用计数
+                    2 => {
+                        if id < 512 {
+                            unsafe { crate::SYSCALL_TIMES[id] as isize }
                         } else {
                             -1
                         }

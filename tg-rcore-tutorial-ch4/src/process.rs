@@ -41,14 +41,11 @@ use xmas_elf::{
 /// - `heap_bottom`：堆底地址（ELF 加载的最高地址的下一页）
 /// - `program_brk`：当前堆顶地址（通过 sbrk 调整）
 pub struct Process {
-    /// 用户态上下文（含 satp，支持跨地址空间的 Trap 切换）
     pub context: ForeignContext,
-    /// 进程的独立地址空间
     pub address_space: AddressSpace<Sv39, Sv39Manager>,
-    /// 堆底地址
     pub heap_bottom: usize,
-    /// 当前程序 break 位置（堆顶）
     pub program_brk: usize,
+    
 }
 
 impl Process {
@@ -150,6 +147,7 @@ impl Process {
             address_space,
             heap_bottom,
             program_brk: heap_bottom,
+            
         })
     }
 
