@@ -565,13 +565,43 @@ mod impls {
         #[inline]
         fn trace(
             &self,
-            _caller: Caller,
-            _trace_request: usize,
-            _id: usize,
-            _data: usize,
+            caller: Caller,
+            trace_request: usize,
+            id: usize,
+            data: usize,
         ) -> isize {
-            tg_console::log::info!("trace: not implemented");
-            -1
+            if let Some(process) = unsafe { PROCESSES.get_mut() }.get_mut(caller.entity) {
+                match trace_request {
+                    // trace_request=0: 读取用户内存
+                    0 => {
+                        const READABLE: VmFlags<Sv39> = build_flags("URV");
+                        if let Some(ptr) = process
+                            .address_space
+                            .translate::<u8>(VAddr::new(id), READABLE)
+                        {
+                            unsafe { *ptr.as_ptr() as isize }
+                        } else {
+                            -1
+                        }
+                    }
+                    // trace_request=1: 写入用户内存
+                    1 => {
+                        const WRITABLE: VmFlags<Sv39> = build_flags("UW_V");
+                        if let Some(mut ptr) = process
+                            .address_space
+                            .translate::<u8>(VAddr::new(id), WRITABLE)
+                        {
+                            unsafe { *ptr.as_mut() = data as u8 };
+                            0
+                        } else {
+                            -1
+                        }
+                    }
+                    _ => -1,
+                }
+            } else {
+                -1
+            }
         }
     }
 
