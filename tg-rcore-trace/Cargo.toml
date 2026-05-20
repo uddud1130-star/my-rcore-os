@@ -1,0 +1,12 @@
+[package]
+name = "tg-rcore-trace"
+version = "0.1.0"
+edition = "2021"
+description = "A syscall trace and memory inspection extension for rCore OS tutorial"
+license = "GPL-3.0"
+readme = "README.md"
+repository = "https://github.com/uddud1130-star/my-rcore-os"
+keywords = ["rcore", "os", "syscall", "trace", "riscv"]
+categories = ["no-std", "embedded"]
+
+[dependencies]
