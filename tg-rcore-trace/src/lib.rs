@@ -123,3 +123,45 @@ pub fn handle_trace(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_counter_new() {
+        let c = SyscallCounter::new();
+        assert_eq!(c.count(64), 0);
+    }
+
+    #[test]
+    fn test_counter_record() {
+        let mut c = SyscallCounter::new();
+        c.record(64);
+        c.record(64);
+        assert_eq!(c.count(64), 2);
+    }
+
+    #[test]
+    fn test_counter_reset() {
+        let mut c = SyscallCounter::new();
+        c.record(64);
+        c.reset();
+        assert_eq!(c.count(64), 0);
+    }
+
+    #[test]
+    fn test_trace_request_parse() {
+        assert_eq!(TraceRequest::try_from(0), Ok(TraceRequest::ReadMemory));
+        assert_eq!(TraceRequest::try_from(1), Ok(TraceRequest::WriteMemory));
+        assert_eq!(TraceRequest::try_from(2), Ok(TraceRequest::CountSyscall));
+        assert!(TraceRequest::try_from(99).is_err());
+    }
+
+    #[test]
+    fn test_out_of_range() {
+        let mut c = SyscallCounter::new();
+        c.record(9999);
+        assert_eq!(c.count(9999), 0);
+    }
+}
