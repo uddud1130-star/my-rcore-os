@@ -128,7 +128,28 @@ extern "C" fn rust_main() -> ! {
                     }
                 }
                 // 其他异常（如非法指令、页错误等）：杀死应用
-                trap => log::error!("app{i} was killed because of {trap:?}"),
+                trap => {
+                    let stval = riscv::register::stval::read();
+                    let sepc = riscv::register::sepc::read();
+                    let reason = match &trap {
+                        Trap::Exception(Exception::StoreFault)
+                        | Trap::Exception(Exception::StorePageFault) =>
+                           "程序尝试写入非法内存地址（如空指针或已释放内存）",
+                        Trap::Exception(Exception::LoadFault)
+                        | Trap::Exception(Exception::LoadPageFault) =>
+                           "程序尝试读取非法内存地址",
+                        Trap::Exception(Exception::IllegalInstruction) =>
+                           "程序执行了非法指令（如在U-mode执行特权指令）",
+                        Trap::Exception(Exception::InstructionFault)
+                        | Trap::Exception(Exception::InstructionPageFault) =>
+                           "程序跳转到非法指令地址",
+                        _ => "未知异常",
+                    };
+                    log::error!(
+                          "app{i} 异常退出\n  异常类型: {:?}\n  触发地址: {:#x}\n  指令地址: {:#x}\n  可能原因: {}",
+                          trap, stval, sepc, reason
+                    );
+                }
             }
             // 清除指令缓存：因为下一个用户程序会被加载到相同的内存区域，
             // 需要确保 i-cache 中不会残留旧的指令

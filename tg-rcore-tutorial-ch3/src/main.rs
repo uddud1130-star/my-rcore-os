@@ -178,9 +178,28 @@ extern "C" fn rust_main() -> ! {
                     }
                     // ─── 其他异常（如非法指令、页错误等）：杀死应用 ───
                     Trap::Exception(e) => {
-                        log::error!("app{i} was killed by {e:?}");
-                        true
-                    }
+    let stval = riscv::register::stval::read();
+    let sepc = riscv::register::sepc::read();
+    let reason = match e {
+        scause::Exception::StoreFault
+        | scause::Exception::StorePageFault =>
+            "程序尝试写入非法内存地址",
+        scause::Exception::LoadFault
+        | scause::Exception::LoadPageFault =>
+            "程序尝试读取非法内存地址",
+        scause::Exception::IllegalInstruction =>
+            "程序执行了非法指令（如在U-mode执行特权指令）",
+        scause::Exception::InstructionFault
+        | scause::Exception::InstructionPageFault =>
+            "程序跳转到非法指令地址",
+        _ => "未知异常",
+    };
+    log::error!(
+        "app{i} 异常退出\n  异常类型: {:?}\n  触发地址: {:#x}\n  指令地址: {:#x}\n  可能原因: {}",
+        e, stval, sepc, reason
+    );
+    true
+}
                     // ─── 未预期的中断：杀死应用 ───
                     Trap::Interrupt(ir) => {
                         log::error!("app{i} was killed by an unexpected interrupt {ir:?}");
