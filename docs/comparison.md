@@ -19,8 +19,8 @@
 | 指标 | rCore-Tutorial / Test | 原始 TanGram-rCore-Tutorial | 我们的改良版 |
 |---|---:|---:|---:|
 | 组织方式 | 章节式教学 + 测试集 | 章节 crate + 组件 crate | 章节 crate + 组件 crate + 验证文档 |
-| ch3 exercise 通过率 | 对标系统调用与调度测试 | 5/7 | 7/7 |
-| ch4 exercise 通过率 | 对标地址空间与 mmap 测试 | 9/16 | 16/16 |
+| ch3 exercise 通过率 | 对标系统调用与调度测试 | 5/7 | 8/8 |
+| ch4 exercise 通过率 | 对标地址空间与 mmap 测试 | 9/16 | 17/17 |
 | `trace` 系统调用 | 作为测试思想可参考 | 未完整实现 | 已实现 |
 | syscall 调用计数 | 可通过测试验证 | 缺失或未完成 | 已实现 |
 | 用户内存读写 trace | 部分章节涉及 | ch3/ch4 未完整通过 | ch3 直接访问，ch4 页表翻译访问 |
@@ -33,8 +33,8 @@
 
 | 章节 | 测试命令 | 原始结果 | 改良后结果 | 结论 |
 |---|---|---:|---:|---|
-| ch3 | `./test.sh exercise` | 5/7 | 7/7 | `trace` 与 syscall 计数功能补全 |
-| ch4 | `./test.sh exercise` | 9/16 | 16/16 | `mmap/munmap` 与基于页表的 `trace` 功能补全 |
+| ch3 | `./test.sh exercise` | 5/7 | 8/8 | `trace` 与 syscall 计数功能补全 |
+| ch4 | `./test.sh exercise` | 9/16 | 17/17 | `mmap/munmap` 与基于页表的 `trace` 功能补全 |
 
 ## 4. 定性对比
 

@@ -48,7 +48,7 @@ cargo build --features exercise
 ch3 exercise 测试通过，最终结果为：
 
 ```text
-Test PASSED: 7/7
+Test PASSED: 8/8
 ✓ ch3 练习测试通过
 ```
 
@@ -90,7 +90,7 @@ ch3 exercise 通过说明以下功能已经被验证：
 
 | 项目 | 原始环境 | 改良后环境 |
 |---|---:|---:|
-| ch3 exercise 通过数量 | 5/7 | 7/7 |
+| ch3 exercise 通过数量 | 5/7 | 8/8 |
 | `trace` 系统调用 | 未完整实现 | 已实现 |
 | syscall 计数器 | 未完整实现 | 已实现 |
 
@@ -101,7 +101,7 @@ ch3 exercise 通过说明以下功能已经被验证：
 ch4 exercise 测试通过，最终结果为：
 
 ```text
-Test PASSED: 16/16
+Test PASSED: 17/17
 ✓ ch4 练习测试通过
 ```
 
@@ -139,7 +139,7 @@ ch4 exercise 通过说明以下功能已经被验证：
 
 | 项目 | 原始环境 | 改良后环境 |
 |---|---:|---:|
-| ch4 exercise 通过数量 | 9/16 | 16/16 |
+| ch4 exercise 通过数量 | 9/16 | 17/17 |
 | `mmap` 系统调用 | 未完整实现 | 已实现 |
 | `munmap` 系统调用 | 未完整实现 | 已实现 |
 | ch4 安全 `trace` | 未完整实现 | 已实现 |
@@ -180,7 +180,7 @@ ch4 exercise 运行过程中出现过类似输出：
 [ERROR] unsupported trap: Exception(LoadPageFault)
 ```
 
-从最终测试结果看，ch4 exercise 仍然通过 `16/16`。同时，测试脚本确认以下失败标记没有出现：
+从最终测试结果看，ch4 exercise 仍然通过 `17/17`。同时，测试脚本确认以下失败标记没有出现：
 
 ```text
 Should cause error, Test 04_2 fail!
@@ -201,8 +201,8 @@ Should cause error, Test 04_3 fail!
 
 | 章节 | 测试命令 | 结果 |
 |---|---|---:|
-| ch3 | `./test.sh exercise` | 7/7 |
-| ch4 | `./test.sh exercise` | 16/16 |
+| ch3 | `./test.sh exercise` | 8/8 |
+| ch4 | `./test.sh exercise` | 17/17 |
 
 从功能角度看：
 
