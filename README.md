@@ -14,8 +14,8 @@
 |------|------|------|---------|
 | ch1 | 裸机启动+最小执行环境 | ✅ 完成 | 通过 |
 | ch2 | 批处理系统+特权级切换+改进Trap错误信息 | ✅ 完成 | 基础 5/5 |
-| ch3 | 多道程序+调度+trace系统调用 | ✅ 完成 | 练习 7/7 |
-| ch4 | 虚拟内存+mmap/munmap+trace | ✅ 完成 | 练习 16/16 |
+| ch3 | 多道程序+调度+trace系统调用 | ✅ 完成 | 练习 8/8 |
+| ch4 | 虚拟内存+mmap/munmap+trace | ✅ 完成 | 练习 17/17 |
 | ch5 | 进程管理+Shell | ✅ 完成 | Basic usertests passed |
 
 ---
@@ -35,13 +35,14 @@
 
 | 指标 | 参考环境 | 本环境 | 提升 |
 |------|---------|--------|------|
-| ch3练习测试通过率 | 5/7 (71%) | 7/7 (100%) | +29% |
-| ch4练习测试通过率 | 9/16 (56%) | 16/16 (100%) | +44% |
+| ch3练习测试通过率 | 5/7 (71%) | 8/8 (100%) | +29% |
+| ch4练习测试通过率 | 9/16 (56%) | 17/17 (100%) | +44% |
 | Trap错误信息 | 1行简单输出 | 4行详细信息 | ✅ |
 | trace功能 | ❌ 未实现 | ✅ 完整实现 | - |
 | mmap/munmap | ❌ 未实现 | ✅ 完整实现 | - |
 | 独立crate | ❌ 无 | ✅ 已发布 | - |
 | 单元测试 | ❌ 无 | ✅ 5/5通过 | - |
+| 回归测试 | ❌ 无 | ✅ 新增2个 | - |
 
 ---
 
@@ -61,15 +62,17 @@ cargo run
 cd tg-rcore-tutorial-ch2
 cargo run
 
-# ch3 基础测试
+# ch3 全部测试
 cd tg-rcore-tutorial-ch3
 cd tg-rcore-tutorial-user && cargo build && cd ..
 TG_USER_LOCAL_DIR=./tg-rcore-tutorial-user bash test.sh
+# 期望：8/8
 
 # ch4 练习测试
 cd tg-rcore-tutorial-ch4
 cd tg-rcore-tutorial-user && cargo build && cd ..
 TG_USER_LOCAL_DIR=./tg-rcore-tutorial-user bash test.sh exercise
+# 期望：17/17
 
 # ch5
 cd tg-rcore-tutorial-ch5
@@ -96,6 +99,7 @@ cargo test
 | 文档 | 说明 |
 |------|------|
 | docs/design_report.md | 教学实验环境设计总结报告 |
+| docs/AI使用报告.md | AI工具使用报告 |
 | docs/comparison.md | 三方环境定性与定量对比分析 |
 | docs/test_cases.md | 测试用例设计文档 |
 | docs/verification.md | 测试验证报告 |
