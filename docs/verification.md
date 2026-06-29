@@ -212,5 +212,3 @@ Should cause error, Test 04_3 fail!
 - ch4 中出现的 Page Fault 输出属于预期异常路径测试。
 
 因此，当前改良版实验环境已经完成 ch3/ch4 关键练习功能的验证闭环，可作为后续三方对比分析和补充测试用例设计的依据。
-ch3_trace_extra: 通过，输出 Test ch3_trace_extra OK!
-ch4_mmap_extra: 通过，输出 Test ch4_mmap_extra OK!
